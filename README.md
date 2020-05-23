@@ -19,5 +19,5 @@ Install [Docker](https://packages.debian.org/buster/docker.io) and pull the late
 $ docker pull mongo
 ```
 
-## How to run the analysis?
+## How to (re-)run the analysis?
 ...

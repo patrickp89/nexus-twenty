@@ -21,4 +21,31 @@ class AppTest {
         val doc = StpScraper().downloadPeopleDiscoveryPage()
         assertThat(doc, Is(not(nullValue())))
     }
+
+    @Test
+    fun testUsernameExtraction() {
+        val usernameLines = sequenceOf(
+                "/path/to/dataset/users//001/001.html:https://www.etoro.com/people/fast_and_unsteady/stats",
+                "/path/to/dataset/users//001/001.html:https://www.etoro.com/people/unsocial-investor"
+        )
+        val usernames = usernameLines
+                .map { NexusTwentyRunner().extractUsername(it) }
+                .toList()
+        assertThat(usernames.size, Is(2))
+        assertThat(usernames[0], Is("fast_and_unsteady"))
+        assertThat(usernames[1], Is("unsocial-investor"))
+    }
+
+    @Test
+    fun testCreateInvestorsWithoutDuplicates() {
+        val usernameLines = sequenceOf(
+                "/path/to/dataset/users//001/001.html:https://www.etoro.com/people/fast_and_unsteady/stats",
+                "/path/to/dataset/users//001/001.html:https://www.etoro.com/people/unsocial-investor",
+                "/path/to/dataset/users//001/001.html:https://www.etoro.com/people/unsocial-investor"
+        )
+        val investors = NexusTwentyRunner().createInvestors(usernameLines)
+        assertThat(investors.size, Is(2))
+        assertThat(investors[0].username, Is("fast_and_unsteady"))
+        assertThat(investors[1].username, Is("unsocial-investor"))
+    }
 }
