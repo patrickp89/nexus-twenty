@@ -1,10 +1,11 @@
 package de.netherspace.research
 
 import de.netherspace.research.crud.Investor
+import de.netherspace.research.crud.InvestorRepository
 import org.slf4j.LoggerFactory
 import java.io.File
 
-class NexusTwentyRunner {
+class NexusTwentyRunner(private val investorRepository: InvestorRepository) {
 
     private val log = LoggerFactory.getLogger(NexusTwentyRunner::class.java)
 
@@ -23,7 +24,8 @@ class NexusTwentyRunner {
                 .readLines()
                 .asSequence()
         val investors = createInvestors(rawUsernameLines)
-        TODO("Not yet implemented")
+        log.info("Persisting ${investors.size} (distinct) investors...")
+        investorRepository.persist(investors)
     }
 
     fun createInvestors(rawUsernameLines: Sequence<String>): List<Investor> {

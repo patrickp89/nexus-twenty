@@ -1,5 +1,6 @@
 package de.netherspace.research
 
+import de.netherspace.research.crud.InvestorRepository
 import org.slf4j.LoggerFactory
 
 class NexusTwenty {
@@ -9,10 +10,16 @@ class NexusTwenty {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            if (args.isNotEmpty()) {
+            if (args.size >= 3) {
                 // TODO: instead of manually downloading and extracting the usernames,
                 // TODO: use StpScraper().downloadPeopleDiscoveryPage() instead!
-                NexusTwentyRunner().extractUsernamesAndPersistToDb(args[0])
+
+                val investorRepository = InvestorRepository(
+                        connectionString = args[1],
+                        databaseName = args[2]
+                )
+                NexusTwentyRunner(investorRepository)
+                        .extractUsernamesAndPersistToDb(args[0])
             } else {
                 log.error("No path to the usernames file given!")
             }

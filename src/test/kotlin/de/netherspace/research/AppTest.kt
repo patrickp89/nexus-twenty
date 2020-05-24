@@ -1,5 +1,6 @@
 package de.netherspace.research
 
+import de.netherspace.research.crud.InvestorRepository
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.nullValue
@@ -8,6 +9,12 @@ import org.junit.Test
 import org.hamcrest.Matchers.`is` as Is
 
 class AppTest {
+
+    private val investorRepository = InvestorRepository(
+            // TODO: set the connection parameters:
+            connectionString = "",
+            databaseName = ""
+    )
 
     @Test
     fun testTrivial() {
@@ -29,7 +36,7 @@ class AppTest {
                 "/path/to/dataset/users//001/001.html:https://www.etoro.com/people/unsocial-investor"
         )
         val usernames = usernameLines
-                .map { NexusTwentyRunner().extractUsername(it) }
+                .map { NexusTwentyRunner(investorRepository).extractUsername(it) }
                 .toList()
         assertThat(usernames.size, Is(2))
         assertThat(usernames[0], Is("fast_and_unsteady"))
@@ -43,7 +50,7 @@ class AppTest {
                 "/path/to/dataset/users//001/001.html:https://www.etoro.com/people/unsocial-investor",
                 "/path/to/dataset/users//001/001.html:https://www.etoro.com/people/unsocial-investor"
         )
-        val investors = NexusTwentyRunner().createInvestors(usernameLines)
+        val investors = NexusTwentyRunner(investorRepository).createInvestors(usernameLines)
         assertThat(investors.size, Is(2))
         assertThat(investors[0].username, Is("fast_and_unsteady"))
         assertThat(investors[1].username, Is("unsocial-investor"))

@@ -24,6 +24,7 @@
             <artifactId>kotlin-stdlib</artifactId>
             <version>${kotlin.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test-junit</artifactId>
@@ -36,12 +37,10 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
-        <!-- Mongo: -->
         <dependency>
-            <groupId>org.litote.kmongo</groupId>
-            <artifactId>kmongo</artifactId>
-            <version>4.0.1</version>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-serialization-runtime</artifactId>
+            <version>0.20.0</version>
         </dependency>
 
         <!-- Logging: -->
@@ -87,11 +86,6 @@
             <artifactId>selenium-java</artifactId>
             <version>${selenium.version}</version>
         </dependency>
-        <!--<dependency>
-            <groupId>org.seleniumhq.selenium</groupId>
-            <artifactId>selenium-chrome-driver</artifactId>
-            <version>${selenium.version}</version>
-        </dependency>-->
     </dependencies>
 
     <build>
@@ -148,6 +142,12 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <jvmTarget>${jdk.version}</jvmTarget>
+                    <args>
+                        <arg>-Xallow-result-return-type</arg>
+                    </args>
+                </configuration>
             </plugin>
 
             <plugin>
