@@ -6,6 +6,8 @@ services:
     restart: "no"
     ports:
       - 27017:27017
+    volumes:
+      - /opt/data/mongo01:/data/db
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: start123

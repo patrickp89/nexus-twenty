@@ -23,14 +23,16 @@ $ docker pull mongo-express
 ```
 
 ## How to (re-)run the analysis?
-Start MongoDB and mongo-express:
+Create the data volume for Mongo (or tweak the volume configuration in the docker-compose
+file according to your needs), then start MongoDB and mongo-express:
 ```bash
+# mkdir -p /opt/data/mongo01/
 $ docker-compose up -d
 ```
 
-Then create a new database in your Mongo instance (e.g. "stpa01") and run:
+Create a new database in your Mongo instance (e.g. "stpa") and run:
 ```bash
-$ bash analyze.sh /path/to/dataset/users/ TODOURL stpa
+$ bash analyze.sh /path/to/dataset/users/ mongodb://root:start123@localhost:27017/ stpa
 ```
 
 ...

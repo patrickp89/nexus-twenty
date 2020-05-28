@@ -11,4 +11,4 @@ grep -Piro 'https:\/\/www\.etoro\.com\/people\/[^\"]+' $pool/* | sort | uniq > $
 echo "Usernames were (temporarily) stored at $user_names_file"
 
 echo " Running Mongo import..."
-java -jar target/NexusTwenty.jar $user_names_file $mongo_conn $mongo_db
+java -jar target/NexusTwenty.jar "-e" $user_names_file $mongo_conn $mongo_db

@@ -12,7 +12,6 @@ import java.time.Duration
 class StpScraper {
 
     private val log = LoggerFactory.getLogger(StpScraper::class.java)
-    private val baseUrl = "https://www.etoro.com"
     private val driver: WebDriver
 
     init {
@@ -25,7 +24,7 @@ class StpScraper {
     }
 
     fun downloadPeopleDiscoveryPage(): String {
-        val url = "$baseUrl/discover/people"
+        val url = "https://www.etoro.com/discover/people"
         log.info("Downloading $url")
         val wait = WebDriverWait(driver, Duration.ofSeconds(30))
         driver.get(url)
@@ -33,5 +32,16 @@ class StpScraper {
         val elem = wait.until(presenceOfElementLocated(By.cssSelector("div.discover-slider-ph-people")))
         log.info(elem.text)
         return "title"
+    }
+
+    fun downloadSinglePortfolio(url: String): String {
+        log.info("Downloading $url")
+        val wait = WebDriverWait(driver, Duration.ofSeconds(30))
+        driver.get(url)
+        return wait
+                .until(presenceOfElementLocated(
+                        By.cssSelector("body")
+                ))
+                .text
     }
 }
