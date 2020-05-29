@@ -1,6 +1,7 @@
 package de.netherspace.research
 
 import de.netherspace.research.crud.InvestorRepository
+import de.netherspace.research.crud.Portfolio
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -14,30 +15,57 @@ class NexusTwentyRunner(private val investorRepository: InvestorRepository) : Ba
             val persistedInvestorCount = persistInvestors(usernamesFile)
             Result.success(persistedInvestorCount)
         } else {
-            log.error("The path '${usernamesFile.absolutePath}' does not exist or is not readable!")
             Result.failure(Exception("The path '${usernamesFile.absolutePath}' does not exist or is not readable!"))
         }
     }
 
-    fun fetchAllInvestorPortfolios(dataPool: File) {
-        if (dataPool.exists()) {
-            investorRepository
+    fun fetchAllInvestorPortfolios(dataPool: File): Result<List<File>> {
+        return if (dataPool.exists()) {
+            val portfolioFiles = investorRepository
                     .fetchAllInvestors()
-                    .toList() // no lazy eval., as we don't want multiple Chromedriver instances running at the same time!
+                    .toList() // no lazy evaluation as we don't want multiple Chromedriver instances running at the same time!
                     .map { it.username }
                     .map { Pair(it, "https://www.etoro.com/people/$it/portfolio") }
-                    .map { Pair(it.first, StpScraper().downloadSinglePortfolio(it.second)) }
+//                    .map { Pair(it.first, StpScraper().downloadSinglePortfolio(it.second)) }
                     .map { writeToDisc(dataPool, it.first, it.second) }
-                    .forEach { println(it.absolutePath) }
+                    .toList()
+            Result.success(portfolioFiles)
         } else {
-            log.error("The path '${dataPool.absolutePath}' does not exist or is not readable!")
+            Result.failure(Exception("The path '${dataPool.absolutePath}' does not exist or is not readable!"))
+        }
+    }
+
+    fun importPortfolioData(dataPool: File): Result<Int> {
+        val scraper = StpScraper()
+        return if (dataPool.exists()) {
+            val portfolios: List<Portfolio> = dataPool // TODO: Pair<Investor, Portfolio> instead!
+                    .walkTopDown()
+                    .filter { it.isFile }
+//                    .map { it.readText() }
+                    .map { scraper.extractPortfolioInformation(it) }
+                    .filter { it.isSuccess }
+                    .map { it.getOrThrow() } // TODO: hm, this should work (somehow) with a flatMap()!
+                    .toList()
+
+            // TODO: persistPortfolios() instead!
+            portfolios
+                    .forEach { println(it) }
+
+            scraper.quit()
+
+            Result.success(portfolios.size)
+        } else {
+            Result.failure(Exception("The path '${dataPool.absolutePath}' does not exist or is not readable!"))
         }
     }
 
     private fun writeToDisc(dataPool: File, username: String, portfolio: String): File {
         val portfolioFile = File(dataPool.absolutePath, username)
         log.info("Writing portfolio of '$username' to ${portfolioFile.absolutePath} ...")
+        /*
+        TODO:
         portfolioFile.writeText(portfolio)
+         */
         return portfolioFile
     }
 

@@ -19,6 +19,7 @@ class NexusTwenty {
                 val op = when (val p = args[0]) {
                     "-e" -> NexusTwentyOperation.EXTRACT_INVESTORS
                     "-d" -> NexusTwentyOperation.DOWNLOAD_INVESTOR_PORTFOLIO
+                    "-i" -> NexusTwentyOperation.IMPORT_PORTFOLIO_DATA
                     "-a" -> NexusTwentyOperation.RUN_ANALYSIS
                     else -> throw Exception("Command line argument $p is invalid!")
                 }
@@ -35,6 +36,8 @@ class NexusTwenty {
                         .drop(3)
                         .toList()
                 parseArgumentsAndRun(op, cliArguments, investorRepository)
+
+                investorRepository.close()
             } else {
                 log.error("You need to specify what should be done: -e, -d, or -a!")
             }
@@ -47,10 +50,10 @@ class NexusTwenty {
             val runner = NexusTwentyRunner(investorRepository)
             when (op) {
                 NexusTwentyOperation.EXTRACT_INVESTORS -> {
-                    if (cliArguments.size >= 3) {
+                    if (cliArguments.isNotEmpty()) {
                         runner.extractUsernamesAndPersistToDb(cliArguments[0])
                                 .fold({ c ->
-                                    println("I persisted $c investors to Mongo")
+                                    log.info("I persisted $c investor(s) into Mongo")
                                 }, { e ->
                                     log.error("An error occurred!", e)
                                 })
@@ -60,11 +63,35 @@ class NexusTwenty {
                 }
 
                 NexusTwentyOperation.DOWNLOAD_INVESTOR_PORTFOLIO -> {
-                    val dataPoolPath = "/tmp/datapool"
-                    val dataPool = File(dataPoolPath)
-                    runner.fetchAllInvestorPortfolios(dataPool)
-                    TODO("Not yet implemented")
+                    if (cliArguments.isNotEmpty()) {
+                        val dataPoolPath = cliArguments[0]
+                        val dataPool = File(dataPoolPath)
+                        runner.fetchAllInvestorPortfolios(dataPool)
+                                .fold({ pfl ->
+                                    log.info("I downloaded ${pfl.size} investor portfolios")
+                                }, { e ->
+                                    log.error("An error occurred!", e)
+                                })
+                    } else {
+                        log.error("No path to the data pool given!")
+                    }
                 }
+
+                NexusTwentyOperation.IMPORT_PORTFOLIO_DATA -> {
+                    if (cliArguments.isNotEmpty()) {
+                        val dataPoolPath = cliArguments[0]
+                        val dataPool = File(dataPoolPath)
+                        runner.importPortfolioData(dataPool)
+                                .fold({ i ->
+                                    log.info("I imported $i investor portfolio(s) into Mongo")
+                                }, { e ->
+                                    log.error("An error occurred!", e)
+                                })
+                    } else {
+                        log.error("No path to the data pool given!")
+                    }
+                }
+
                 NexusTwentyOperation.RUN_ANALYSIS -> TODO("Not yet implemented")
             }
         }
@@ -73,6 +100,7 @@ class NexusTwenty {
     enum class NexusTwentyOperation {
         EXTRACT_INVESTORS,
         DOWNLOAD_INVESTOR_PORTFOLIO,
+        IMPORT_PORTFOLIO_DATA,
         RUN_ANALYSIS
     }
 }

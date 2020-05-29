@@ -19,4 +19,8 @@ class InvestorRepository(connectionString: String, databaseName: String) {
                 .find()
                 .asSequence()
     }
+
+    fun close() {
+        mongoClient.close()
+    }
 }
