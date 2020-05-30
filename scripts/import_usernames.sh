@@ -1,8 +1,8 @@
 #!/bin/bash
 
-pool=$1
-mongo_conn='mongodb://root:start123@localhost:27017/'
-mongo_db='stpa'
+mongo_conn=$1
+mongo_db=$2
+pool=$3
 
 # find all usernames:
 echo "Searching for usernames in $pool ..."

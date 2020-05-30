@@ -18,7 +18,7 @@ class NexusTwenty {
             if (args.size >= 3) {
                 val op = when (val p = args[0]) {
                     "-e" -> NexusTwentyOperation.EXTRACT_INVESTORS
-                    "-d" -> NexusTwentyOperation.DOWNLOAD_INVESTOR_PORTFOLIO
+                    "-d" -> NexusTwentyOperation.GET_INVESTOR_PORTFOLIO_URLS
                     "-i" -> NexusTwentyOperation.IMPORT_PORTFOLIO_DATA
                     "-a" -> NexusTwentyOperation.RUN_ANALYSIS
                     else -> throw Exception("Command line argument $p is invalid!")
@@ -62,19 +62,9 @@ class NexusTwenty {
                     }
                 }
 
-                NexusTwentyOperation.DOWNLOAD_INVESTOR_PORTFOLIO -> {
-                    if (cliArguments.isNotEmpty()) {
-                        val dataPoolPath = cliArguments[0]
-                        val dataPool = File(dataPoolPath)
-                        runner.fetchAllInvestorPortfolios(dataPool)
-                                .fold({ pfl ->
-                                    log.info("I downloaded ${pfl.size} investor portfolios")
-                                }, { e ->
-                                    log.error("An error occurred!", e)
-                                })
-                    } else {
-                        log.error("No path to the data pool given!")
-                    }
+                NexusTwentyOperation.GET_INVESTOR_PORTFOLIO_URLS -> {
+                    runner.getAllInvestorPortfolioUrls()
+                            .forEach { println(it) }
                 }
 
                 NexusTwentyOperation.IMPORT_PORTFOLIO_DATA -> {
@@ -99,7 +89,7 @@ class NexusTwenty {
 
     enum class NexusTwentyOperation {
         EXTRACT_INVESTORS,
-        DOWNLOAD_INVESTOR_PORTFOLIO,
+        GET_INVESTOR_PORTFOLIO_URLS,
         IMPORT_PORTFOLIO_DATA,
         RUN_ANALYSIS
     }

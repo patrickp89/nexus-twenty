@@ -11,10 +11,9 @@ class InvestorRepository(connectionString: String, databaseName: String) {
     fun persist(investors: List<Investor>) {
         val investorCollection = db.getCollection<Investor>()
         investorCollection.insertMany(investors)
-        TODO("Not yet implemented")
     }
 
-    fun fetchAllInvestors() : Sequence<Investor> {
+    fun fetchAllInvestors(): Sequence<Investor> {
         return db.getCollection<Investor>()
                 .find()
                 .asSequence()

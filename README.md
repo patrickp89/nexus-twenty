@@ -32,7 +32,11 @@ $ docker-compose up -d
 
 Create a new database in your Mongo instance (e.g. "stpa") and run:
 ```bash
-$ bash analyze.sh /path/to/dataset/users/ mongodb://root:start123@localhost:27017/ stpa
+$ export MONGO_URL='mongodb://root:start123@localhost:27017/'
+$ export MONGO_DB_NAME='stpa'
+$ bash scripts/import_usernames.sh $MONGO_URL $MONGO_DB_NAME /path/to/dataset/raw/users/
+$ bash scripts/download_portfolios.sh $MONGO_URL $MONGO_DB_NAME ~/Downloads/portfolios/ /path/to/dataset/raw/portfolios
+$ java -jar target/NexusTwenty.jar -i $MONGO_URL $MONGO_DB_NAME /path/to/dataset/raw/portfolios
 ```
 
 ...
