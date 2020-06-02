@@ -11,15 +11,14 @@ class NexusTwenty {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            // TODO: instead of manually downloading and extracting the usernames,
-            // TODO: use StpScraper().downloadPeopleDiscoveryPage() instead!
-
             // first, figure out what to do:
             if (args.size >= 3) {
                 val op = when (val p = args[0]) {
                     "-e" -> NexusTwentyOperation.EXTRACT_INVESTORS
                     "-d" -> NexusTwentyOperation.GET_INVESTOR_PORTFOLIO_URLS
-                    "-i" -> NexusTwentyOperation.IMPORT_PORTFOLIO_DATA
+                    "-b" -> NexusTwentyOperation.GET_INVESTOR_BIO_URLS
+                    "-p" -> NexusTwentyOperation.IMPORT_PORTFOLIO_DATA
+                    "-i" -> NexusTwentyOperation.IMPORT_INVESTOR_BIOS
                     "-a" -> NexusTwentyOperation.RUN_ANALYSIS
                     else -> throw Exception("Command line argument $p is invalid!")
                 }
@@ -47,7 +46,8 @@ class NexusTwenty {
                 op: NexusTwentyOperation,
                 cliArguments: List<String>,
                 investorRepository: InvestorRepository) {
-            val runner = NexusTwentyRunner(investorRepository)
+            val baseUrl = "https://www.etoro.com"
+            val runner = NexusTwentyRunner(investorRepository, baseUrl)
             when (op) {
                 NexusTwentyOperation.EXTRACT_INVESTORS -> {
                     if (cliArguments.isNotEmpty()) {
@@ -67,6 +67,11 @@ class NexusTwenty {
                             .forEach { println(it) }
                 }
 
+                NexusTwentyOperation.GET_INVESTOR_BIO_URLS -> {
+                    runner.getAllInvestorBioUrls()
+                            .forEach { println(it) }
+                }
+
                 NexusTwentyOperation.IMPORT_PORTFOLIO_DATA -> {
                     if (cliArguments.isNotEmpty()) {
                         val dataPoolPath = cliArguments[0]
@@ -74,6 +79,21 @@ class NexusTwenty {
                         runner.importPortfolioData(dataPool)
                                 .fold({ i ->
                                     log.info("I imported $i investor portfolio(s) into Mongo")
+                                }, { e ->
+                                    log.error("An error occurred!", e)
+                                })
+                    } else {
+                        log.error("No path to the data pool given!")
+                    }
+                }
+
+                NexusTwentyOperation.IMPORT_INVESTOR_BIOS -> {
+                    if (cliArguments.isNotEmpty()) {
+                        val dataPoolPath = cliArguments[0]
+                        val dataPool = File(dataPoolPath)
+                        runner.importInvestorBios(dataPool)
+                                .fold({ i ->
+                                    log.info("I imported $i investor bio(s) into Mongo")
                                 }, { e ->
                                     log.error("An error occurred!", e)
                                 })
@@ -90,7 +110,11 @@ class NexusTwenty {
     enum class NexusTwentyOperation {
         EXTRACT_INVESTORS,
         GET_INVESTOR_PORTFOLIO_URLS,
+        GET_INVESTOR_BIO_URLS,
         IMPORT_PORTFOLIO_DATA,
+        IMPORT_INVESTOR_BIOS,
+        // TODO: GET_ALL_DISTINCT_ASSETS
+        // TODO: IMPORT_ANNOTATED_ASSETS
         RUN_ANALYSIS
     }
 }

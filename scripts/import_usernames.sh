@@ -7,7 +7,7 @@ pool=$3
 # find all usernames:
 echo "Searching for usernames in $pool ..."
 user_names_file=$(mktemp /tmp/user.names.XXXXX)
-grep -Piro 'https:\/\/www\.etoro\.com\/people\/[^\"]+' $pool/* | sort | uniq > $user_names_file
+grep -Piro 'https:\/\/www\..toro\.com\/people\/[^\"]+' $pool/* | sort | uniq > $user_names_file
 echo "Usernames were (temporarily) stored at $user_names_file"
 
 echo " Running Mongo import..."

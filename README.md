@@ -35,8 +35,10 @@ Create a new database in your Mongo instance (e.g. "stpa") and run:
 $ export MONGO_URL='mongodb://root:start123@localhost:27017/'
 $ export MONGO_DB_NAME='stpa'
 $ bash scripts/import_usernames.sh $MONGO_URL $MONGO_DB_NAME /path/to/dataset/raw/users/
+$ bash scripts/download_investor_bios.sh $MONGO_URL $MONGO_DB_NAME ~/Downloads/investor_bios/ /path/to/dataset/raw/investor_bios
+$ java -jar target/NexusTwenty.jar -i $MONGO_URL $MONGO_DB_NAME /path/to/dataset/raw/investor_bios
 $ bash scripts/download_portfolios.sh $MONGO_URL $MONGO_DB_NAME ~/Downloads/portfolios/ /path/to/dataset/raw/portfolios
-$ java -jar target/NexusTwenty.jar -i $MONGO_URL $MONGO_DB_NAME /path/to/dataset/raw/portfolios
+$ java -jar target/NexusTwenty.jar -p $MONGO_URL $MONGO_DB_NAME /path/to/dataset/raw/portfolios
 ```
 
 ...

@@ -1,5 +1,7 @@
 package de.netherspace.research
 
+import de.netherspace.research.crud.Gender
+import de.netherspace.research.crud.InvestorBio
 import de.netherspace.research.crud.Portfolio
 import de.netherspace.research.crud.PortfolioElement
 import org.openqa.selenium.By
@@ -25,6 +27,7 @@ class StpScraper {
         options.addArguments("--disable-extensions")
         options.addArguments("--remote-debugging-port=9876")
         options.addArguments("--disable-dev-shm-usage")
+        options.addArguments("--disable-javascript")
         this.driver = ChromeDriver(options)
     }
 
@@ -32,8 +35,8 @@ class StpScraper {
         driver.quit()
     }
 
-    fun downloadPeopleDiscoveryPage(): String {
-        val url = "https://www.etoro.com/discover/people"
+    fun downloadPeopleDiscoveryPage(baseUrl: String): String {
+        val url = "$baseUrl/discover/people"
         log.info("Downloading $url")
         val wait = WebDriverWait(driver, Duration.ofSeconds(30))
         driver.get(url)
@@ -55,9 +58,12 @@ class StpScraper {
     }
 
     fun extractPortfolioInformation(portfolioHtml: File): Result<Portfolio> {
-        driver.get("file:///${portfolioHtml.absolutePath}")
+        val url = "file:///${portfolioHtml.absolutePath}"
+        log.trace("Loading $url")
+        driver.get(url)
+
         return try {
-            val wait = WebDriverWait(driver, Duration.ofSeconds(5))
+            val wait = WebDriverWait(driver, Duration.ofSeconds(15))
 
             val assetTable = wait
                     .until(presenceOfElementLocated(
@@ -72,6 +78,28 @@ class StpScraper {
 
         } catch (e: Exception) {
             log.error("An error occurred while extracting the portfolio information!", e)
+            Result.failure(e)
+        }
+    }
+
+    fun extractInvestorBio(investorFeedHtml: File): Result<InvestorBio> {
+        val url = "file:///${investorFeedHtml.absolutePath}"
+        log.trace("Loading $url")
+        driver.get(url)
+
+        return try {
+            val wait = WebDriverWait(driver, Duration.ofSeconds(15))
+
+            val bioDiv = wait
+                    .until(presenceOfElementLocated(
+                            By.cssSelector("div.instrument-widget-title")
+                    ))
+            Result.success(
+                    toInvestorBio(bioDiv)
+            )
+
+        } catch (e: Exception) {
+            log.error("An error occurred while extracting the investor bio!", e)
             Result.failure(e)
         }
     }
@@ -128,5 +156,23 @@ class StpScraper {
     private fun extractPercentage(assetRowElement: WebElement): BigDecimal? {
         // TODO: extract the % value...
         return BigDecimal.ZERO
+    }
+
+    private fun toInvestorBio(bioDiv: WebElement): InvestorBio {
+        val country = extractCountryName(bioDiv)
+        return InvestorBio(
+                countryOfResidence = country ?: "",
+                gender = Gender.UNKNOWN
+        )
+    }
+
+    private fun extractCountryName(bioDiv: WebElement): String? {
+        return try {
+            bioDiv.findElement(
+                    By.xpath(".//span[contains(@class, 'instrument-widget-social-country-label')]")
+            ).getAttribute("innerHTML")
+        } catch (e: java.lang.Exception) {
+            null
+        }
     }
 }

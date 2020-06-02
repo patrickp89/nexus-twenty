@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 mongo_conn=$1
 mongo_db=$2
 download_location=$3
@@ -18,7 +17,7 @@ done
 echo "Copying downloaded portfolios to $datapool_location ..."
 IFS=$'\n'
 for f in `ls -1 $download_location/*.html`; do
-  dollar_username=`echo "$f" | grep -Po '\@([^\s])+'`
+  dollar_username=`echo "$f" | grep -Po '\@([^\s]+)'`
   username=${dollar_username:1}
   cp -n $f $datapool_location/"$username-portfolio.html"
 done

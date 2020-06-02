@@ -1,6 +1,8 @@
 package de.netherspace.research.crud
 
 import org.litote.kmongo.KMongo
+import org.litote.kmongo.eq
+import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
 
 class InvestorRepository(connectionString: String, databaseName: String) {
@@ -17,6 +19,16 @@ class InvestorRepository(connectionString: String, databaseName: String) {
         return db.getCollection<Investor>()
                 .find()
                 .asSequence()
+    }
+
+    fun findInvestorByName(investorName: String): Investor? {
+        return db.getCollection<Investor>()
+                .findOne(Investor::username eq investorName.toLowerCase()) // TODO: why are the names converted to lc on insert??
+    }
+
+    fun update(investorId: Investor, investorBio: InvestorBio) {
+        // TODO: db.getCollection<Investor>().updateOne(...)
+        TODO("Not yet implemented")
     }
 
     fun close() {
