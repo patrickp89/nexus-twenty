@@ -1,18 +1,25 @@
 package de.netherspace.research.crud
 
-import org.litote.kmongo.KMongo
-import org.litote.kmongo.eq
-import org.litote.kmongo.findOne
-import org.litote.kmongo.getCollection
+import com.mongodb.client.result.InsertManyResult
+import com.mongodb.client.result.InsertOneResult
+import com.mongodb.client.result.UpdateResult
+import org.litote.kmongo.*
 
 class InvestorRepository(connectionString: String, databaseName: String) {
 
     private val mongoClient = KMongo.createClient(connectionString)
     private val db = mongoClient.getDatabase(databaseName)
 
-    fun persist(investors: List<Investor>) {
-        val investorCollection = db.getCollection<Investor>()
-        investorCollection.insertMany(investors)
+    fun persistAll(investors: List<Investor>): InsertManyResult {
+        return db
+                .getCollection<Investor>()
+                .insertMany(investors)
+    }
+
+    fun persist(portfolio: Portfolio): InsertOneResult {
+        return db
+                .getCollection<Portfolio>()
+                .insertOne(portfolio)
     }
 
     fun fetchAllInvestors(): Sequence<Investor> {
@@ -26,9 +33,13 @@ class InvestorRepository(connectionString: String, databaseName: String) {
                 .findOne(Investor::username eq investorName.toLowerCase()) // TODO: why are the names converted to lc on insert??
     }
 
-    fun update(investorId: Investor, investorBio: InvestorBio) {
-        // TODO: db.getCollection<Investor>().updateOne(...)
-        TODO("Not yet implemented")
+    fun update(investor: Investor, investorBio: InvestorBio): UpdateResult {
+        return db
+                .getCollection<Investor>()
+                .updateOne(
+                        Investor::username eq investor.username,
+                        Investor::bio setTo investorBio
+                )
     }
 
     fun close() {

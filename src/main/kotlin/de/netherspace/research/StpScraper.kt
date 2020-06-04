@@ -35,31 +35,10 @@ class StpScraper {
         driver.quit()
     }
 
-    fun downloadPeopleDiscoveryPage(baseUrl: String): String {
-        val url = "$baseUrl/discover/people"
-        log.info("Downloading $url")
-        val wait = WebDriverWait(driver, Duration.ofSeconds(30))
-        driver.get(url)
-
-        val elem = wait.until(presenceOfElementLocated(By.cssSelector("div.discover-slider-ph-people")))
-        log.info(elem.text)
-        return "title"
-    }
-
-    fun downloadSinglePortfolio(url: String): String {
-        log.info("Downloading $url")
-        val wait = WebDriverWait(driver, Duration.ofSeconds(30))
-        driver.get(url)
-        return wait
-                .until(presenceOfElementLocated(
-                        By.cssSelector("body")
-                ))
-                .text
-    }
-
+    @Synchronized
     fun extractPortfolioInformation(portfolioHtml: File): Result<Portfolio> {
         val url = "file:///${portfolioHtml.absolutePath}"
-        log.trace("Loading $url")
+        log.info("Loading $url")
         driver.get(url)
 
         return try {
@@ -77,11 +56,14 @@ class StpScraper {
             )
 
         } catch (e: Exception) {
-            log.error("An error occurred while extracting the portfolio information!", e)
+            // empty portfolio will result in an exception - gosh, we really
+            // need a Selenium Kotlin port with proper error handling... -.-
+            log.trace("An error occurred while extracting the portfolio information from '$url'!", e)
             Result.failure(e)
         }
     }
 
+    @Synchronized
     fun extractInvestorBio(investorFeedHtml: File): Result<InvestorBio> {
         val url = "file:///${investorFeedHtml.absolutePath}"
         log.trace("Loading $url")
@@ -99,7 +81,7 @@ class StpScraper {
             )
 
         } catch (e: Exception) {
-            log.error("An error occurred while extracting the investor bio!", e)
+            log.trace("An error occurred while extracting the investor bio from '$url'!", e)
             Result.failure(e)
         }
     }
@@ -125,7 +107,10 @@ class StpScraper {
                 .map { it as PortfolioElement }
                 .toList()
 
-        return Portfolio(portfolioElements)
+        return Portfolio(
+                portfolioElements = portfolioElements,
+                investorName = null
+        )
     }
 
     private fun extractShortName(assetRowElement: WebElement): String? {
@@ -154,8 +139,25 @@ class StpScraper {
     }
 
     private fun extractPercentage(assetRowElement: WebElement): BigDecimal? {
-        // TODO: extract the % value...
-        return BigDecimal.ZERO
+        return try {
+            val matchingTableCells = assetRowElement
+                    .findElements(
+                            By.xpath(".//ui-table-cell[contains(@class, 'ng-binding') and not(contains(@class, 'negative'))]")
+                    )
+
+            // the first one holds the percentage that we are interested in:
+            val assetPercentage = matchingTableCells
+                    .first()
+                    .text
+
+            // parse a BigDecimal:
+            assetPercentage
+                    .substring(0, assetPercentage.length - 1)
+                    .toBigDecimal()
+
+        } catch (e: java.lang.Exception) {
+            null
+        }
     }
 
     private fun toInvestorBio(bioDiv: WebElement): InvestorBio {

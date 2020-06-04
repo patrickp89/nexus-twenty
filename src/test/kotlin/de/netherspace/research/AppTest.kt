@@ -39,9 +39,17 @@ class AppTest {
     @Test
     fun testInvestorNameExtractionFromBioFileName() {
         val fileName = "notsosmartandunssocial-bio.html"
-        val investorName = TestRunner().extractInvestorNameFromBioFile(fileName)
+        val investorName = TestRunner().extractInvestorNameFromBioFilename(fileName)
         assertThat(investorName, Is(not(nullValue())))
         assertThat(investorName, Is("notsosmartandunssocial"))
+    }
+
+    @Test
+    fun testInvestorNameExtractionFromPortfolioFileName() {
+        val fileName = "SaviorGan-portfolio.html"
+        val investorName = TestRunner().extractInvestorNameFromPortfolioFilename(fileName)
+        assertThat(investorName, Is(not(nullValue())))
+        assertThat(investorName, Is("SaviorGan"))
     }
 
     class TestRunner : BaseRunner

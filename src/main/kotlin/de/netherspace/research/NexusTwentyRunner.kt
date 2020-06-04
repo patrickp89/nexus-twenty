@@ -1,9 +1,7 @@
 package de.netherspace.research
 
 import de.netherspace.research.crud.Investor
-import de.netherspace.research.crud.InvestorBio
 import de.netherspace.research.crud.InvestorRepository
-import de.netherspace.research.crud.Portfolio
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -50,20 +48,32 @@ class NexusTwentyRunner(
         val scraper = StpScraper()
         return if (dataPool.exists()) {
             log.info("Importing portfolio data...")
-            val portfolios: List<Portfolio> = dataPool // TODO: Pair<Investor, Portfolio> instead!
+
+            // only those portfolio HTML files that have a corresponding investor in our db:
+            val htmlsOfExInvestors = dataPool
                     .walkTopDown()
                     .filter { it.isFile }
                     .filter { it.name.endsWith("-portfolio.html") }
-                    .map { scraper.extractPortfolioInformation(it) }
-                    .filter { it.isSuccess }
-                    .map { it.getOrThrow() } // TODO: hm, this should work (somehow) with a flatMap()!
+                    .map { findInvestor(it) { f -> extractInvestorNameFromPortfolioFilename(f.name) } }
+                    .filter { it.first != null }
+
+            // extract the portfolio data:
+            val portfolios = htmlsOfExInvestors
+                    .map { Pair(it.first as Investor, scraper.extractPortfolioInformation(it.second)) }
+                    .filter { it.second.isSuccess }
+                    .map { Pair(it.first, it.second.getOrThrow()) } // TODO: hm, this should work (somehow) with a flatMap()!
                     .toList()
 
-            // TODO: persistPortfolios() instead!
-            portfolios.forEach { println(it) }
-
             scraper.quit()
-            Result.success(portfolios.size)
+
+            // persist the portfolios:
+            val persistedPortfolios = portfolios
+                    .asSequence()
+                    .map { it.second.copy(investorName = it.first.username) }
+                    .map { investorRepository.persist(it) }
+                    .toList()
+
+            Result.success(persistedPortfolios.size)
         } else {
             Result.failure(Exception("The path '${dataPool.absolutePath}' does not exist or is not readable!"))
         }
@@ -79,11 +89,11 @@ class NexusTwentyRunner(
                     .walkTopDown()
                     .filter { it.isFile }
                     .filter { it.name.endsWith("-bio.html") }
-                    .map { findInvestor(it) }
+                    .map { findInvestor(it) { f -> extractInvestorNameFromBioFilename(f.name) } }
                     .filter { it.first != null }
 
             // extract the investor bios:
-            val investorBios: List<Pair<Investor, InvestorBio>> = htmlsOfExistingInvestors
+            val investorBios = htmlsOfExistingInvestors
                     .map { Pair(it.first as Investor, scraper.extractInvestorBio(it.second)) }
                     .filter { it.second.isSuccess }
                     .map { Pair(it.first, it.second.getOrThrow()) } // TODO: hm, this should work (somehow) with a flatMap()!
@@ -92,18 +102,19 @@ class NexusTwentyRunner(
             scraper.quit()
 
             // persist the investor bios:
-            investorBios
+            val persistedInvestorBios = investorBios
+                    .asSequence()
                     .map { investorRepository.update(it.first, it.second) }
                     .toList()
 
-            Result.success(investorBios.size)
+            Result.success(persistedInvestorBios.size)
         } else {
             Result.failure(Exception("The path '${dataPool.absolutePath}' does not exist or is not readable!"))
         }
     }
 
-    private fun findInvestor(investorFeedHtml: File): Pair<Investor?, File> {
-        val investorName = extractInvestorNameFromBioFile(investorFeedHtml.name)
+    private fun findInvestor(investorFeedHtml: File, extract: (f: File) -> String?): Pair<Investor?, File> {
+        val investorName = extract(investorFeedHtml)
                 ?: throw Exception("Could not extract investor's name from HTML's file name: ${investorFeedHtml.absolutePath}!")
         val investor = investorRepository.findInvestorByName(investorName)
         return Pair(investor, investorFeedHtml)
@@ -116,7 +127,7 @@ class NexusTwentyRunner(
                 .asSequence()
         val investors = createInvestors(rawUsernameLines)
         log.info("Persisting ${investors.size} (distinct) investors...")
-        investorRepository.persist(investors)
+        investorRepository.persistAll(investors)
         return investors.size
     }
 }

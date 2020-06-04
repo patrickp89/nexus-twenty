@@ -10,7 +10,7 @@ interface BaseRunner {
                 .filter { it != null }
                 .map { it as String }
                 .distinct()
-                .map { Investor(it) }
+                .map { Investor(it, null) }
                 .toList()
     }
 
@@ -22,8 +22,17 @@ interface BaseRunner {
                 ?.last()
     }
 
-    fun extractInvestorNameFromBioFile(investorFeedHtmlName: String): String? {
+    fun extractInvestorNameFromBioFilename(investorFeedHtmlName: String): String? {
         val matches = """(.+)-bio.html"""
+                .toRegex()
+                .find(investorFeedHtmlName)
+                ?.groupValues!!
+
+        return matches[1]
+    }
+
+    fun extractInvestorNameFromPortfolioFilename(investorFeedHtmlName: String): String? {
+        val matches = """(.+)-portfolio.html"""
                 .toRegex()
                 .find(investorFeedHtmlName)
                 ?.groupValues!!
