@@ -23,20 +23,18 @@ interface BaseRunner {
     }
 
     fun extractInvestorNameFromBioFilename(investorFeedHtmlName: String): String? {
-        val matches = """(.+)-bio.html"""
+        return """(.+)-bio.html"""
                 .toRegex()
                 .find(investorFeedHtmlName)
-                ?.groupValues!!
-
-        return matches[1]
+                ?.groupValues
+                ?.last()
     }
 
     fun extractInvestorNameFromPortfolioFilename(investorFeedHtmlName: String): String? {
-        val matches = """(.+)-portfolio.html"""
+        return """(.+)-portfolio.html"""
                 .toRegex()
                 .find(investorFeedHtmlName)
-                ?.groupValues!!
-
-        return matches[1]
+                ?.groupValues
+                ?.last()
     }
 }

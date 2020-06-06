@@ -19,7 +19,8 @@ class NexusTwenty {
                     "-b" -> NexusTwentyOperation.GET_INVESTOR_BIO_URLS
                     "-p" -> NexusTwentyOperation.IMPORT_PORTFOLIO_DATA
                     "-i" -> NexusTwentyOperation.IMPORT_INVESTOR_BIOS
-                    "-a" -> NexusTwentyOperation.RUN_ANALYSIS
+                    "-a" -> NexusTwentyOperation.GET_ALL_DISTINCT_ASSETS
+                    "-r" -> NexusTwentyOperation.RUN_ANALYSIS
                     else -> throw Exception("Command line argument $p is invalid!")
                 }
 
@@ -38,7 +39,7 @@ class NexusTwenty {
 
                 investorRepository.close()
             } else {
-                log.error("You need to specify what should be done: -e, -d, or -a!")
+                log.error("You need to specify what should be done!")
             }
         }
 
@@ -102,6 +103,13 @@ class NexusTwenty {
                     }
                 }
 
+                NexusTwentyOperation.GET_ALL_DISTINCT_ASSETS -> {
+                    println("short_name; full_name;")
+                    runner.getAllDistinctAssets()
+                            .map { "${it.second}; ${it.first};" }
+                            .forEach { println(it) }
+                }
+
                 NexusTwentyOperation.RUN_ANALYSIS -> TODO("Not yet implemented")
             }
         }
@@ -113,7 +121,7 @@ class NexusTwenty {
         GET_INVESTOR_BIO_URLS,
         IMPORT_PORTFOLIO_DATA,
         IMPORT_INVESTOR_BIOS,
-        // TODO: GET_ALL_DISTINCT_ASSETS
+        GET_ALL_DISTINCT_ASSETS,
         // TODO: IMPORT_ANNOTATED_ASSETS
         RUN_ANALYSIS
     }

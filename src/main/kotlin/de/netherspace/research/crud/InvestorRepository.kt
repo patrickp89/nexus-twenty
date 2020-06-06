@@ -28,6 +28,12 @@ class InvestorRepository(connectionString: String, databaseName: String) {
                 .asSequence()
     }
 
+    fun fetchAllPortfolios(): Sequence<Portfolio> {
+        return db.getCollection<Portfolio>()
+                .find()
+                .asSequence()
+    }
+
     fun findInvestorByName(investorName: String): Investor? {
         return db.getCollection<Investor>()
                 .findOne(Investor::username eq investorName.toLowerCase()) // TODO: why are the names converted to lc on insert??

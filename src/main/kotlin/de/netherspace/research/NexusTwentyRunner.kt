@@ -61,7 +61,7 @@ class NexusTwentyRunner(
             val portfolios = htmlsOfExInvestors
                     .map { Pair(it.first as Investor, scraper.extractPortfolioInformation(it.second)) }
                     .filter { it.second.isSuccess }
-                    .map { Pair(it.first, it.second.getOrThrow()) } // TODO: hm, this should work (somehow) with a flatMap()!
+                    .map { Pair(it.first, it.second.getOrThrow()) }
                     .toList()
 
             scraper.quit()
@@ -96,7 +96,7 @@ class NexusTwentyRunner(
             val investorBios = htmlsOfExistingInvestors
                     .map { Pair(it.first as Investor, scraper.extractInvestorBio(it.second)) }
                     .filter { it.second.isSuccess }
-                    .map { Pair(it.first, it.second.getOrThrow()) } // TODO: hm, this should work (somehow) with a flatMap()!
+                    .map { Pair(it.first, it.second.getOrThrow()) }
                     .toList()
 
             scraper.quit()
@@ -111,6 +111,20 @@ class NexusTwentyRunner(
         } else {
             Result.failure(Exception("The path '${dataPool.absolutePath}' does not exist or is not readable!"))
         }
+    }
+
+    /**
+     * Get all assets (from all persisted portfolios),
+     * their full and (optional) short name.
+     */
+    fun getAllDistinctAssets(): List<Pair<String, String>> {
+        return investorRepository
+                .fetchAllPortfolios()
+                .map { it.portfolioElements }
+                .flatten()
+                .distinctBy { it.assetFullName }
+                .map { Pair(it.assetFullName, it.assetShortName) }
+                .toList()
     }
 
     private fun findInvestor(investorFeedHtml: File, extract: (f: File) -> String?): Pair<Investor?, File> {
