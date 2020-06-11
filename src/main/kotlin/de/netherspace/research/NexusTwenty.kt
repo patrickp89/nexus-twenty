@@ -20,7 +20,9 @@ class NexusTwenty {
                     "-p" -> NexusTwentyOperation.IMPORT_PORTFOLIO_DATA
                     "-i" -> NexusTwentyOperation.IMPORT_INVESTOR_BIOS
                     "-a" -> NexusTwentyOperation.GET_ALL_DISTINCT_ASSETS
-                    "-r" -> NexusTwentyOperation.RUN_ANALYSIS
+                    "-s" -> NexusTwentyOperation.SEARCH_BY_ASSET
+                    "-n" -> NexusTwentyOperation.IMPORT_ANNOTATED_ASSET_LIST
+                    "-r" -> NexusTwentyOperation.RECTANGULARIZE_DATA
                     else -> throw Exception("Command line argument $p is invalid!")
                 }
 
@@ -110,7 +112,45 @@ class NexusTwenty {
                             .forEach { println(it) }
                 }
 
-                NexusTwentyOperation.RUN_ANALYSIS -> TODO("Not yet implemented")
+                NexusTwentyOperation.SEARCH_BY_ASSET -> {
+                    if (cliArguments.isNotEmpty()) {
+                        val shortName = cliArguments[0]
+                        val portfolios = runner.searchPortfoliosByAsset(shortName)
+                        println("Their are ${portfolios.size} matching short name '$shortName' ")
+                        portfolios.forEach { println(it) }
+                    } else {
+                        log.error("Search key missing!")
+                    }
+                }
+
+                NexusTwentyOperation.IMPORT_ANNOTATED_ASSET_LIST -> {
+                    if (cliArguments.isNotEmpty()) {
+                        val annotatedAssetListPath = cliArguments[0]
+                        val annotatedAssetList = File(annotatedAssetListPath)
+                        runner.importAnnotatedAssets(annotatedAssetList)
+                                .fold({ i ->
+                                    log.info("I imported $i assets with a asset-type annotation")
+                                }, { e ->
+                                    log.error("An error occurred!", e)
+                                })
+                    } else {
+                        log.error("Path to asset list missing!")
+                    }
+                }
+
+                NexusTwentyOperation.RECTANGULARIZE_DATA -> {
+                    if (cliArguments.isNotEmpty()) {
+                        val outputFilePath = cliArguments[0]
+                        runner.rectangularizeData(outputFilePath)
+                                .fold({ f ->
+                                    log.info("Wrote the CSV file to ${f.absolutePath}")
+                                }, { e ->
+                                    log.error("An error occurred!", e)
+                                })
+                    } else {
+                        log.error("Path to output file missing!")
+                    }
+                }
             }
         }
     }
@@ -122,7 +162,8 @@ class NexusTwenty {
         IMPORT_PORTFOLIO_DATA,
         IMPORT_INVESTOR_BIOS,
         GET_ALL_DISTINCT_ASSETS,
-        // TODO: IMPORT_ANNOTATED_ASSETS
-        RUN_ANALYSIS
+        SEARCH_BY_ASSET,
+        IMPORT_ANNOTATED_ASSET_LIST,
+        RECTANGULARIZE_DATA
     }
 }

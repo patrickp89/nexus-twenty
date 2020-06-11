@@ -5,6 +5,9 @@ import java.math.BigDecimal
 
 @Serializable
 data class PortfolioElement(
+
+        // TODO: val asset: Asset, instead of the two names! -> rebuild the DB!
+
         // the asset's short name, e.g. "TSLA":
         val assetShortName: String,
 

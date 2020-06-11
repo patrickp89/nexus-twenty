@@ -8,6 +8,10 @@ IFS=$'\n'
 cat_single_stock="SINGLE_STOCK"
 cat_commodity="COMMODITY"
 cat_currency="CURRENCY"
+cat_currency="CRYPTO_CURRENCY"
+cat_copied_trader="COPYPORTFOLIO"
+cat_etf="ETF"
+cat_cfd="CFD"
 
 # the output file:
 annotated_assets_file=$(mktemp /tmp/annotated-assets.XXXXX)
@@ -39,6 +43,14 @@ annotate 'AG;' $cat_single_stock
 annotate 'Aktiengesellschaft;' $cat_single_stock
 annotate 'Group;' $cat_single_stock
 annotate 'GROUP;' $cat_single_stock
+annotate 'SE;' $cat_single_stock
+annotate 'SA;' $cat_single_stock
+annotate 'S\.A\.;' $cat_single_stock
+annotate 'PLC;' $cat_single_stock
+annotate 'Plc;' $cat_single_stock
+annotate 'AB ser. A;' $cat_single_stock
+annotate 'AB;' $cat_single_stock
+annotate 'OAO;' $cat_single_stock
 
 wc -l $annotated_assets_file
 

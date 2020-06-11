@@ -22,6 +22,9 @@ $ docker pull mongo
 $ docker pull mongo-express
 ```
 
+And make sure to have [R](https://www.r-project.org/) installed as well.
+
+
 ## How to (re-)run the analysis?
 Create the data volume for Mongo (or tweak the volume configuration in the docker-compose
 file according to your needs), then start MongoDB and mongo-express:
@@ -35,10 +38,15 @@ Create a new database in your Mongo instance (e.g. "stpa") and run:
 $ export MONGO_URL='mongodb://root:start123@localhost:27017/'
 $ export MONGO_DB_NAME='stpa'
 $ bash scripts/import_usernames.sh $MONGO_URL $MONGO_DB_NAME /path/to/dataset/raw/users/
+
 $ bash scripts/download_investor_bios.sh $MONGO_URL $MONGO_DB_NAME ~/Downloads/investor_bios/ /path/to/dataset/raw/investor_bios
 $ java -jar target/NexusTwenty.jar -i $MONGO_URL $MONGO_DB_NAME /path/to/dataset/raw/investor_bios
+
 $ bash scripts/download_portfolios.sh $MONGO_URL $MONGO_DB_NAME ~/Downloads/portfolios/ /path/to/dataset/raw/portfolios
 $ java -jar target/NexusTwenty.jar -p $MONGO_URL $MONGO_DB_NAME /path/to/dataset/raw/portfolios
-```
 
-...
+$ java -jar target/NexusTwenty.jar -n $MONGO_URL $MONGO_DB_NAME /path/to/dataset/processed/annotated_assets.csv
+$ java -jar target/NexusTwenty.jar -r $MONGO_URL $MONGO_DB_NAME /tmp/final_data.csv
+
+$ Rscript scripts/analyze.r
+```
