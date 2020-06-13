@@ -8,6 +8,8 @@ data class InvestorBio(
         val gender: Gender
 )
 
-enum class Gender {
-    MALE, FEMALE, UNKNOWN
+enum class Gender(val value: String) {
+    MALE("m"),
+    FEMALE("f"),
+    UNKNOWN("u")
 }

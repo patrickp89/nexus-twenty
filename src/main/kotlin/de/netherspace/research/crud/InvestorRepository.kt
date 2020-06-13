@@ -22,7 +22,7 @@ class InvestorRepository(connectionString: String, databaseName: String) {
                 .insertOne(portfolio)
     }
 
-    fun persist(asset: Asset): InsertOneResult {
+    fun persistAsset(asset: Asset): InsertOneResult {
         return db
                 .getCollection<Asset>()
                 .insertOne(asset)
@@ -57,7 +57,7 @@ class InvestorRepository(connectionString: String, databaseName: String) {
                 ?.assetType
     }
 
-    fun update(investor: Investor, investorBio: InvestorBio): UpdateResult {
+    fun updateInvestorBio(investor: Investor, investorBio: InvestorBio): UpdateResult {
         return db
                 .getCollection<Investor>()
                 .updateOne(

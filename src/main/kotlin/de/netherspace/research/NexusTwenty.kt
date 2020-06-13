@@ -23,6 +23,8 @@ class NexusTwenty {
                     "-s" -> NexusTwentyOperation.SEARCH_BY_ASSET
                     "-n" -> NexusTwentyOperation.IMPORT_ANNOTATED_ASSET_LIST
                     "-r" -> NexusTwentyOperation.RECTANGULARIZE_DATA
+                    "-c" -> NexusTwentyOperation.GET_ALL_COUNTRIES
+                    "-g" -> NexusTwentyOperation.IMPORT_INVESTOR_GENDERS
                     else -> throw Exception("Command line argument $p is invalid!")
                 }
 
@@ -106,7 +108,7 @@ class NexusTwenty {
                 }
 
                 NexusTwentyOperation.GET_ALL_DISTINCT_ASSETS -> {
-                    println("short_name; full_name;")
+                    println("short_name; full_name;") // TODO: the whitespace messes up with the kotlin-csv lib... -.-
                     runner.getAllDistinctAssets()
                             .map { "${it.second}; ${it.first};" }
                             .forEach { println(it) }
@@ -151,6 +153,26 @@ class NexusTwenty {
                         log.error("Path to output file missing!")
                     }
                 }
+
+                NexusTwentyOperation.GET_ALL_COUNTRIES -> {
+                    runner.getAllCountries()
+                            .forEach { println(it) }
+                }
+
+                NexusTwentyOperation.IMPORT_INVESTOR_GENDERS -> {
+                    if (cliArguments.isNotEmpty()) {
+                        val investorsToGendersListPath = cliArguments[0]
+                        val investorsToGendersList = File(investorsToGendersListPath)
+                        runner.importInvestorGenders(investorsToGendersList)
+                                .fold({ i ->
+                                    log.info("I imported $i investor genders")
+                                }, { e ->
+                                    log.error("An error occurred!", e)
+                                })
+                    } else {
+                        log.error("Path to gender list missing!")
+                    }
+                }
             }
         }
     }
@@ -164,6 +186,8 @@ class NexusTwenty {
         GET_ALL_DISTINCT_ASSETS,
         SEARCH_BY_ASSET,
         IMPORT_ANNOTATED_ASSET_LIST,
-        RECTANGULARIZE_DATA
+        RECTANGULARIZE_DATA,
+        GET_ALL_COUNTRIES,
+        IMPORT_INVESTOR_GENDERS
     }
 }

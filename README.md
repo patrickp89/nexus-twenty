@@ -22,7 +22,11 @@ $ docker pull mongo
 $ docker pull mongo-express
 ```
 
-And make sure to have [R](https://www.r-project.org/) installed as well.
+Make sure to have [R](https://www.r-project.org/) installed as well and install the tidyverse package
+collection:
+```bash
+# Rscript scripts/install-deps.r
+```
 
 
 ## How to (re-)run the analysis?
@@ -48,5 +52,5 @@ $ java -jar target/NexusTwenty.jar -p $MONGO_URL $MONGO_DB_NAME /path/to/dataset
 $ java -jar target/NexusTwenty.jar -n $MONGO_URL $MONGO_DB_NAME /path/to/dataset/processed/annotated_assets.csv
 $ java -jar target/NexusTwenty.jar -r $MONGO_URL $MONGO_DB_NAME /tmp/final_data.csv
 
-$ Rscript scripts/analyze.r
+$ Rscript scripts/analyze.r /tmp/final_data.csv
 ```

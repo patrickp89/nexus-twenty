@@ -1,5 +1,6 @@
 package de.netherspace.research
 
+import com.github.doyaaaaaken.kotlincsv.client.CsvReader
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
 import de.netherspace.research.crud.*
@@ -115,7 +116,7 @@ class NexusTwentyRunner(
             // persist the investor bios:
             val persistedInvestorBios = investorBios
                     .asSequence()
-                    .map { investorRepository.update(it.first, it.second) }
+                    .map { investorRepository.updateInvestorBio(it.first, it.second) }
                     .toList()
 
             Result.success(persistedInvestorBios.size)
@@ -153,26 +154,33 @@ class NexusTwentyRunner(
      */
     fun importAnnotatedAssets(annotatedAssetList: File): Result<Int> {
         return if (annotatedAssetList.exists()) {
-            val csvReader = csvReader {
-                charset = "UTF-8"
-                quoteChar = '"'
-                delimiter = ';'
-                escapeChar = '"'
-            }
-            val assets: List<Asset> = csvReader
+            val persistedAssets = createCsvReader()
                     .readAllWithHeader(annotatedAssetList)
                     .map { toAsset(it) }
-                    .toList()
-            println("I read ${assets.count()} assets!") // TODO: delete me!
-
-            val persistedAssets = assets
-                    .asSequence()
-                    .map { investorRepository.persist(it) }
+                    .map { investorRepository.persistAsset(it) }
                     .toList()
 
             Result.success(persistedAssets.size)
         } else {
-            Result.failure(Exception("The path '' does not exist or is not readable!"))
+            Result.failure(Exception("The path '${annotatedAssetList.absolutePath}' does not exist or is not readable!"))
+        }
+    }
+
+    /**
+     * IMports all (investor, gender) tuples to MongoDB.
+     */
+    fun importInvestorGenders(investorsToGendersList: File): Result<Int> {
+        return if (investorsToGendersList.exists()) {
+            val updatedInvestors = createCsvReader()
+                    .readAllWithHeader(investorsToGendersList)
+                    .map { toInvestorNameGenderPair(it) }
+                    .map { toInvestorBioPair(it.first, it.second) }
+                    .map { investorRepository.updateInvestorBio(it.first, it.second) }
+                    .toList()
+
+            Result.success(updatedInvestors.size)
+        } else {
+            Result.failure(Exception("The path '${investorsToGendersList.absolutePath}' does not exist or is not readable!"))
         }
     }
 
@@ -183,8 +191,14 @@ class NexusTwentyRunner(
     fun rectangularizeData(outputFilePath: String): Result<File> {
         val rowCounter = AtomicInteger(1)
         val header = listOf(listOf(
-                "id", "investor_name", "asset_short_name", "asset_type", "vol_percentage"
-        )) // TODO: bio, fullname,
+                "id",
+                "investor_name",
+                "asset_short_name",
+                "asset_type",
+                "vol_percentage",
+                "inv_country_of_residence",
+                "inv_gender"
+        ))
 
         val rows: List<List<String>> = investorRepository
                 .fetchAllPortfolios()
@@ -207,6 +221,55 @@ class NexusTwentyRunner(
             Result.success(outputFile)
         } else {
             Result.failure(Exception("Something went wrong when writing to ${outputFile.absolutePath}!"))
+        }
+    }
+
+    /**
+     * Prints all countries that investors live in.
+     */
+    fun getAllCountries(): List<String> {
+        return investorRepository
+                .fetchAllInvestors()
+                .filter { it.bio != null }
+                .map { it.bio!!.countryOfResidence }
+                .map { countryNameWithoutUmlauts(it) }
+                .distinct()
+                .toList()
+    }
+
+    private fun toInvestorNameGenderPair(row: Map<String, String>): Pair<String, Gender> {
+        val investorName: String = row["investor_name"]
+                ?: throw Exception("Missing investor_name in row $row !")
+        val genderString: String = row["gender"]
+                ?: throw Exception("Missing gender in row $row !")
+        return Pair(investorName, toGender(genderString))
+    }
+
+    private fun toGender(genderString: String): Gender {
+        return when (genderString) {
+            Gender.MALE.value -> Gender.MALE
+            Gender.FEMALE.value -> Gender.FEMALE
+            Gender.UNKNOWN.value -> Gender.UNKNOWN
+            else -> throw Exception("Could not recognize gender string '$genderString'!")
+        }
+    }
+
+    private fun toInvestorBioPair(investorName: String, gender: Gender): Pair<Investor, InvestorBio> {
+        val investor: Investor = investorRepository.findInvestorByName(investorName)
+                ?: throw Exception("Couldn't find investor!")
+        val oldBio: InvestorBio = investor.bio
+                ?: throw Exception("InvestorBio == null -> this shouldn't be possible!")
+
+        val newBio = oldBio.copy(gender = gender)
+        return Pair(investor, newBio)
+    }
+
+    private fun createCsvReader(): CsvReader {
+        return csvReader {
+            charset = "UTF-8"
+            quoteChar = '"'
+            delimiter = ';'
+            escapeChar = '"'
         }
     }
 
@@ -247,8 +310,24 @@ class NexusTwentyRunner(
                 investor.username,
                 portfolioElement.assetShortName,
                 assetType.value,
-                "${portfolioElement.volPercentage}"
+                "${portfolioElement.volPercentage}",
+                countryNameWithoutUmlauts(investor.bio?.countryOfResidence),
+                investor.bio?.gender?.value ?: ""
         )
+    }
+
+    private fun countryNameWithoutUmlauts(countryOfResidence: String?): String {
+        return countryOfResidence
+                ?.trim()
+                ?.replace(" ", "_", true)
+                ?.replace("ö", "oe", false)
+                ?.replace("Ö", "Öe", false)
+                ?.replace("ü", "ue", false)
+                ?.replace("Ü", "Ue", false)
+                ?.replace("ä", "ae", false)
+                ?.replace("Ä", "Ae", false)
+                ?.replace("ß", "ss", false)
+                ?: ""
     }
 
     private fun toAsset(row: Map<String, String>): Asset {
