@@ -22,12 +22,17 @@ $ docker pull mongo
 $ docker pull mongo-express
 ```
 
-Make sure to have [R](https://www.r-project.org/) installed as well and install the tidyverse package
-collection:
+Make sure to have [R](https://www.r-project.org/) in a version >= 3.6.0 installed. Then install
+the tidyverse package collection and John Fox' Companion to Applied Regression package by running:
 ```bash
 # Rscript scripts/install-deps.r
 ```
 
+If you build these R packages from scratch you might need to install a couple
+of dependencies first. On Debian run:
+```bash
+# apt-get install build-essential libcurl4-openssl-dev libxml2-dev libbz2-dev libpcre2-dev
+```
 
 ## How to (re-)run the analysis?
 Create the data volume for Mongo (or tweak the volume configuration in the docker-compose

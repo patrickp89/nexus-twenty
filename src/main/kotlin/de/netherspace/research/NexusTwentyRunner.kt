@@ -321,7 +321,7 @@ class NexusTwentyRunner(
                 ?.trim()
                 ?.replace(" ", "_", true)
                 ?.replace("ö", "oe", false)
-                ?.replace("Ö", "Öe", false)
+                ?.replace("Ö", "Oe", false)
                 ?.replace("ü", "ue", false)
                 ?.replace("Ü", "Ue", false)
                 ?.replace("ä", "ae", false)

@@ -29,3 +29,5 @@ hs_err_pid*
 # Maven folders
 **/target/
 
+Rplots.pdf
+scatterplot-matrix.png
