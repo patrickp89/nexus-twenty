@@ -58,7 +58,7 @@ super_categorized_assets <- assets %>%
   ))
 
 
-message("\n\nPortfolio vol. percentage of asset super-types?")
+message("\n\nPortfolio vol. percentage of asset super-types, grouped by user?")
 investors_cumulated_assettype_percentages <- super_categorized_assets %>%
   group_by(investor_name, inv_gender, inv_country_of_residence, self_other_machine_picked) %>%
   summarise(total_vol_percentage_per_at = sum(vol_percentage))
@@ -111,5 +111,25 @@ summary(fit3)
 
 message("\n\nscatterplotMatrix()...")
 png("./target/scatterplot-matrix.png", width = 800, height = 800)
-scatterplotMatrix(~ total_vol_percentage_per_at + inv_gender + inv_country_of_residence,
+scatterplotMatrix(~ total_vol_percentage_per_at + self_other_machine_picked + inv_gender + inv_country_of_residence,
   data = investors_cumulated_assettype_percentages)
+
+
+message("\n\nMean/median portfolio vol. percentage of asset super-types?")
+investors_cumulated_assettype_percentages %>%
+  ungroup() %>%
+  filter(self_other_machine_picked == "own_pick") %>%
+  select(self_other_machine_picked, total_vol_percentage_per_at) %>%
+  summary()
+
+investors_cumulated_assettype_percentages %>%
+  ungroup() %>%
+  filter(self_other_machine_picked == "another_humans_pick") %>%
+  select(self_other_machine_picked, total_vol_percentage_per_at) %>%
+  summary()
+
+investors_cumulated_assettype_percentages %>%
+  ungroup() %>%
+  filter(self_other_machine_picked == "algorithm_pick") %>%
+  select(self_other_machine_picked, total_vol_percentage_per_at) %>%
+  summary()
